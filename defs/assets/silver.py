@@ -2,9 +2,9 @@ import dagster as dg
 import ibis
 from pathlib import Path
 
-from resources import ImpalaResource 
+from ..resources import ImpalaResource 
 # Import the parent bronze assets to maintain the lineage chain
-from bronze import bronze_db_asset, table_a_raw, table_b_raw
+from .bronze import bronze_db_asset, table_a_raw, table_b_raw
 
 # ---------------------------------------------------------
 # --- SILVER LAYER (Metadata Template) ---
@@ -117,6 +117,6 @@ def silver_integrity_check(silver_transformed_asset: ibis.Table, impala: ImpalaR
             # --- EXPRESSION ---
             "expression": dg.MetadataValue.md(f"```python\n{check_expr}\n```"),
            # --- DYNAMIC METRICS ---
-            "error_metric": val,
+            "error_metric": val
         }
     )
