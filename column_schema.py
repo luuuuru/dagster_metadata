@@ -1,4 +1,4 @@
-column_schema = dg.TableSchema( 
+column_schema_templete = dg.TableSchema( 
    columns=[ 
        dg.TableColumn( 
            name="",  
