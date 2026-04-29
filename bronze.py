@@ -4,7 +4,7 @@ from pathlib import Path
 
 from resources import ImpalaResource 
 # Import your empty or filled schemas here
-from column_schemas import template_column_schema
+from column_schema import template_column_schema
 
 # ---------------------------------------------------------
 # --- BRONZE LAYER (Metadata Template) ---
