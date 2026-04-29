@@ -2,9 +2,9 @@ import dagster as dg
 import ibis
 from pathlib import Path
 
-from resources import ImpalaResource 
+from ..resources import ImpalaResource 
 # Import your empty or filled schemas here
-from column_schema import template_column_schema
+from ...column_schema import template_column_schema
 
 # ---------------------------------------------------------
 # --- BRONZE LAYER (Metadata Template) ---
