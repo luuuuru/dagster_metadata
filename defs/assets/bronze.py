@@ -29,7 +29,7 @@ def database_raw_asset(impala: ImpalaResource) -> str:
 @dg.asset(
     group_name="BRONZE",
     description="TEMPLATE: Table [TABLE_NAME]",
-    metadata={
+    metadata={ # Metadata Table level
         # --- DESCRIPTIVE ---
         "name": "TABLE_NAME",        
         "clinical_coverage": "N/A", # e.g., Patients with pathology X
