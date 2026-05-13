@@ -14,9 +14,7 @@ from ...column_schema import template_column_schema
 @dg.asset(
     group_name="BRONZE",
     description="TEMPLATE: Connection and validation of database [DB_NAME]",
-    metadata={
-        "type": "Administrative",
-        "db_engine": "Impala/Cloudera"    
+    metadata={ # Metadata Dataset level
 }
 )
 def database_raw_asset(impala: ImpalaResource) -> str:
@@ -25,7 +23,6 @@ def database_raw_asset(impala: ImpalaResource) -> str:
     db_name = "YOUR_DB_NAME" # <--- FILL IN
     tables = conn.list_tables(database=db_name)
     dg.get_dagster_logger().info(f"Database: {db_name}. Tables found: {len(tables)}")
-
     return db_name
 
 # 2. THE "CHILD" ASSET (Table / Static Definition)
@@ -34,23 +31,19 @@ def database_raw_asset(impala: ImpalaResource) -> str:
     description="TEMPLATE: Table [TABLE_NAME]",
     metadata={
         # --- DESCRIPTIVE ---
-        "name": "TECHNICAL_TABLE_NAME",
-        "display_name": "HUMAN_READABLE_NAME",
+        "name": "TABLE_NAME",        
         "clinical_coverage": "N/A", # e.g., Patients with pathology X
         "temporal_coverage": "N/A", # e.g., 2020-2024
         "contextual_coverage": "N/A", # e.g., Source System X
-        
         # --- STRUCTURAL ---
-        "dagster/column_schema": None, # <--- ASSIGN YOUR TableSchema OBJECT
+        "dagster/column_schema": None, # <--- ASSIGN YOUR TableSchema OBJECT; template_column_schema 
         "linkage": dg.MetadataValue.md("- **Relationship**: N/A"), 
-        
         # --- PROVENANCE ---
         "provenance": dg.MetadataValue.json({
             "source_system": "SOURCE_SYSTEM",
             "update_frequency": "DAILY/MONTHLY",
             "rules_applied": ["Direct Raw Load"]
         }),
-
         # --- SEMANTIC ---
         "semantics": dg.MetadataValue.json({
             "standard_mapping": "N/A", # e.g., OMOP, SNOMED, LOINC
