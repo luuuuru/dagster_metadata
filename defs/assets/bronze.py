@@ -3,58 +3,79 @@ import ibis
 from pathlib import Path
 
 from ..resources import ImpalaResource 
-# Import your empty or filled schemas here
-from ...column_schema import template_column_schema
 
+from utils.utils_bronze import materialize_bronze_asset, export_bronze_metadata
 # ---------------------------------------------------------
 # --- BRONZE LAYER (Metadata Template) ---
 # ---------------------------------------------------------
 
-# 1. THE "PARENT" ASSET (Database / Higher Hierarchical Level)
+# 1. THE "PARENT" ASSET (Database)
 @dg.asset(
+    name="database_raw_asset",
     group_name="BRONZE",
     description="TEMPLATE: Connection and validation of database [DB_NAME]",
     metadata={ # Metadata Dataset level
+        "source_system": "SOURCE_SYSTEM_DESCRIPTION", # <--- FILL IN
+        "clinical_coverage": "", 
+        "temporal_coverage": "",
+        "standard_mapping": dg.MetadataValue.json({
+            "target_standard": ""
+        })
 }
 )
-def database_raw_asset(impala: ImpalaResource) -> str:
-    """Validates the existence of the database and returns its name."""
+def database_raw_asset(context: dg.AssetExecutionContext, impala: ImpalaResource) -> str:
+"""Validates the existence of the database and triggers the JSON metadata export."""    
     conn = impala.get_connection()
     db_name = "YOUR_DB_NAME" # <--- FILL IN
     tables = conn.list_tables(database=db_name)
-    dg.get_dagster_logger().info(f"Database: {db_name}. Tables found: {len(tables)}")
-    return db_name
+    context.log.info(f"Database: {DATABASE_TARGET}. Tables found: {len(tables)}")
 
-# 2. THE "CHILD" ASSET (Table / Static Definition)
+# 1. Create the native materialization metadata dictionary
+    materialization_metadata = {
+        "database_count": len(tables),
+        "databases": tables
+    }
+
+# 2. Invoke the new function to export the unified JSON
+    export_bronze_metadata(
+            context=context, 
+            materialization_metadata=materialization_metadata, 
+            entity_name=DATABASE_TARGET, 
+            is_database=True
+        )
+    
+# 3. Yield the result to the Dagster UI
+    yield dg.MaterializeResult(
+        metadata={
+            "database_count": materialization_metadata["database_count"],
+            "databases": dg.MetadataValue.json(materialization_metadata["databases"])
+        }
+    )
+
+# 2. THE "CHILD" ASSET (Table)
 @dg.asset(
+    name="table_raw_asset", # <--- FILL IN
     group_name="BRONZE",
     description="TEMPLATE: Table [TABLE_NAME]",
     metadata={ # Metadata Table level
         # --- DESCRIPTIVE ---
         "name": "TABLE_NAME",        
-        "clinical_coverage": "N/A", # e.g., Patients with pathology X
-        "temporal_coverage": "N/A", # e.g., 2020-2024
-        "contextual_coverage": "N/A", # e.g., Source System X
-        # --- STRUCTURAL ---
-        "dagster/column_schema": None, # <--- ASSIGN YOUR TableSchema OBJECT; template_column_schema 
-        "linkage": dg.MetadataValue.md("- **Relationship**: N/A"), 
-        # --- PROVENANCE ---
         "provenance": dg.MetadataValue.json({
-            "source_system": "SOURCE_SYSTEM",
-            "update_frequency": "DAILY/MONTHLY",
-            "rules_applied": ["Direct Raw Load"]
-        }),
-        # --- SEMANTIC ---
-        "semantics": dg.MetadataValue.json({
-            "standard_mapping": "N/A", # e.g., OMOP, SNOMED, LOINC
-        })
+            "source_system": "SOURCE_SYSTEM"})
     }
 )
 def table_raw_asset(database_raw_asset: str, impala: ImpalaResource):
     """
     Loads the table from Impala. 
-    Note: The metadata defined here represents the DEFINITION (Input).
     """
-    conn = impala.get_connection()
-    table_name = "IMPALA_TABLE_NAME" # <--- FILL IN
-    return conn.table(table_name, database=database_raw_asset)
+    TABLE_NAME = "TABLE_NAME" # <--- FILL IN
+    YAML_PATH = CONTRACTS_DIR / f"{TABLE_NAME}.yaml"
+
+    return materialize_bronze_asset(
+            context=context,
+            yaml_path=str(YAML_PATH), 
+            impala_resource=impala, 
+            table_name=TABLE_NAME,
+            contracts_dir=CONTRACTS_DIR,
+            database_name=DATABASE_TARGET
+        )
