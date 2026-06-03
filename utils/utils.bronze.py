@@ -97,7 +97,7 @@ def materialize_bronze_asset(
     table_name: str, 
     contracts_dir: Path, 
     database_name: str = ""
-) -> dg.Output:  # <--- Cambiado a dg.Output para soportar pasar el objeto 'value'
+) -> dg.Output:  
     """
     Loads a schema contract from a YAML file, builds the structural Dagster TableSchema,
     resolves the connection to the underlying Impala table via Ibis, and returns 
@@ -141,7 +141,7 @@ def materialize_bronze_asset(
         entity_name=table_name
     )
     
-    # 6. Return standard Output (permite asociar un valor físico a la UI de Dagster)
+    # 6. Return standard Output 
     return dg.Output(
         value=result,         
         metadata=mat_metadata  
@@ -198,7 +198,7 @@ def export_bronze_metadata(
         "materialization_metadata": clean_mat_meta
     }
 
-    export_dir = Path("/home/cdsw/dagster_quickstart/metadata_exports")
+    export_dir = Path("")
     export_dir.mkdir(parents=True, exist_ok=True)
     
     prefix = "database_" if is_database else ""
