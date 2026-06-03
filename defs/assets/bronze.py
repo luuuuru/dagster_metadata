@@ -5,6 +5,10 @@ from pathlib import Path
 from ..resources import ImpalaResource 
 
 from utils.utils_bronze import materialize_bronze_asset, export_bronze_metadata
+
+DATABASE_TARGET = "YOUR_DB_NAME"
+CONTRACTS_DIR = Path("Your_Path")
+
 # ---------------------------------------------------------
 # --- BRONZE LAYER (Metadata Template) ---
 # ---------------------------------------------------------
